@@ -1,0 +1,80 @@
+version: '3.5'
+services:  
+  fluentd:
+    image: 'fluent/fluentd:v0.12.42'
+    container_name: pi_fluentd
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - "./fluentd:/fluentd/etc"
+    environment:
+      FLUENTD_CONF: fluent-${PIROGRAM_ENV:-dev}.conf
+    networks:
+      - pirogram
+ 
+  postgres: 
+    image: 'postgres:10.3-alpine'
+    container_name: pi_postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - "./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d"
+      - "postgres-data:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    networks:
+      - pirogram
+
+  redis:
+    image: 'redis:4.0.9-alpine'
+    container_name: pi_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - "redis-data:/data"
+    networks:
+      - pirogram
+
+  content-sync:
+    image: 'pirogram/content-sync:latest'
+    container_name: pi_content_sync
+    restart: always
+    volumes:
+      - "../pirogram-content:/content/src"
+      - "pirogram-content:/content/dst"
+
+  pirogram-server:
+    image: 'pirogram/pirogram-server:latest'
+    restart: always
+    container_name: pi_serv
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+      - redis
+      - fluentd
+      - content-sync
+    environment:
+      NODE_ENV: ${PIROGRAM_ENV:-dev}
+    networks:
+      - pirogram
+    volumes:
+      - "../pirogram-server:/ext/pirogram-server"
+      - "pirogram-content:/ext/pirogram-content"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    command: npm run ${PIROGRAM_ENV:-dev}_start
+
+volumes:
+  redis-data:
+    name: redis-data
+  postgres-data:
+    name: postgres-data
+  pirogram-content:
+    name: pirogram-content
+
+networks:
+  pirogram:
+    name: pirogram
