@@ -23,7 +23,7 @@ services:
       - "./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d"
       - "postgres-data:/var/lib/postgresql/data"
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${PIROGRAM_POSTGRES_PASSWORD:-postgres}
     networks:
       - pirogram
 
@@ -50,8 +50,6 @@ services:
     image: 'pirogram/pirogram-server:latest'
     restart: always
     container_name: pi_serv
-    ports:
-      - "5000:5000"
     depends_on:
       - postgres
       - redis
@@ -62,10 +60,25 @@ services:
     networks:
       - pirogram
     volumes:
-      - "../pirogram-server:/ext/pirogram-server"
-      - "pirogram-content:/ext/pirogram-content"
+      - "../pirogram-server:/mnt/pirogram-server"
+      - "pirogram-content:/mnt/pirogram-content"
       - "/var/run/docker.sock:/var/run/docker.sock"
     command: npm run ${PIROGRAM_ENV:-dev}_start
+
+  nginx:
+    image: 'nginx:latest'
+    restart: always
+    container_name: pi_nginx
+    depends_on:
+      - pirogram-server
+    ports:
+      - "${PIROGRAM_PORT:-5000}:80"
+    volumes:
+      - "./nginx/nginx-${PIROGRAM_ENV:-dev}.conf:/etc/nginx/nginx.conf"
+      - "../pirogram-server:/mnt/pirogram-server"
+      - "pirogram-content:/mnt/pirogram-content"
+    networks:
+      - pirogram
 
 volumes:
   redis-data:

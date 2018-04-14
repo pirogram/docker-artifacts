@@ -14,8 +14,8 @@ RUN add-apt-repository \
    $(lsb_release -cs) \
    stable" && apt-get update && apt-get -y install docker-ce
 
-RUN mkdir /ext && mkdir /ext/pirogram-server && mkdir /ext/pirogram-content
+RUN mkdir -p /mnt/pirogram-server && mkdir -p /mnt/pirogram-content
 
-WORKDIR /ext/pirogram-server
+WORKDIR /mnt/pirogram-server
 
 CMD nodemon -e yaml,js,html server.js
