@@ -1,0 +1,136 @@
+version: '3.5'
+services:  
+  fluentd:
+    image: 'fluent/fluentd:v0.12.42'
+    container_name: pi_fluentd
+    volumes:
+      - "./fluentd:/fluentd/etc"
+      - "fluent-logs:/fluentd/log"
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    environment:
+      FLUENTD_CONF: fluent-production.conf
+    networks:
+      - pirogram
+ 
+  postgres: 
+    image: 'postgres:10.3-alpine'
+    container_name: pi_postgres
+    restart: always
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: "localhost:24224"
+        tag: postgres
+    depends_on:
+      - fluentd
+    volumes:
+      - "./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d"
+      - "postgres-data:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    networks:
+      - pirogram
+
+  redis:
+    image: 'redis:4.0.9-alpine'
+    container_name: pi_redis
+    restart: always
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: "localhost:24224"
+        tag: redis
+    depends_on:
+      - fluentd
+    ports:
+      - "6379:6379"
+    volumes:
+      - "redis-data:/data"
+    networks:
+      - pirogram
+
+  content-sync:
+    image: 'pirogram/content-sync:latest'
+    container_name: pi_content_sync
+    restart: always
+    depends_on:
+      - fluentd
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: "localhost:24224"
+        tag: content-sync
+    volumes:
+      - "../pirogram-content:/content/src"
+      - "pirogram-content:/content/dst"
+
+  pirogram-server:
+    image: 'pirogram/pirogram-server:latest'
+    restart: always
+    container_name: pi_serv
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: "localhost:24224"
+        tag: piserv
+    depends_on:
+      - fluentd
+      - postgres
+      - redis
+      - content-sync
+    environment:
+      NODE_ENV: production
+      DB_USER: postgres
+      DB_PASSWORD: pirogram
+      DB_NAME: pirogram
+    networks:
+      - pirogram
+    volumes:
+      - "../pirogram-server:/mnt/pirogram-server"
+      - "pirogram-content:/mnt/pirogram-content"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    command: npm run production_start
+
+  nginx:
+    image: 'nginx:latest'
+    restart: always
+    container_name: pi_nginx
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: "localhost:24224"
+        tag: nginx
+    depends_on:
+      - pirogram-server
+      - fluentd
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./nginx/nginx-production.conf:/etc/nginx/nginx.conf"
+      - "../pirogram-server:/mnt/pirogram-server"
+      - "pirogram-content:/mnt/pirogram-content"
+      - "certs:/etc/letsencrypt"
+      - "certs-data:/mnt/letsencrypt"
+    networks:
+      - pirogram
+
+volumes:
+  redis-data:
+    name: redis-data
+  postgres-data:
+    name: postgres-data
+  pirogram-content:
+    name: pirogram-content
+  fluent-logs:
+    name: fluent-logs
+  certs:
+    name: certs
+  certs-data:
+    name: certs-data
+
+networks:
+  pirogram:
+    name: pirogram
