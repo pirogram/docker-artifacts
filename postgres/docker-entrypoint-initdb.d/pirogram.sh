@@ -9,10 +9,21 @@ psql -d pirogram -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email CHARACTER VARYING(256) NOT NULL UNIQUE,
+    username CHARACTER VARYING(256) NOT NULL UNIQUE,
+    password CHARACTER VARYING(64),
     name CHARACTER VARYING(256),
-    avatar CHARACTER VARYING(256),
+    avatar CHARACTER VARYING(1024),
+    blurb CHARACTER VARYING(1024),
     active BOOLEAN,
     superuser BOOLEAN,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITHOUT TIME ZONE,
+    updated_at TIMESTAMP WITHOUT TIME ZONE
+);
+
+CREATE TABLE password_reset_requests (
+    id CHARACTER VARYING(64) PRIMARY KEY,
+    user_id INTEGER,
     created_at TIMESTAMP WITHOUT TIME ZONE,
     updated_at TIMESTAMP WITHOUT TIME ZONE
 );

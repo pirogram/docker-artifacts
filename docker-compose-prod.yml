@@ -85,6 +85,9 @@ services:
       DB_USER: postgres
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DB_NAME: pirogram
+      SESSION_APP_KEY: ${SESSION_APP_KEY}
+      MAILGUN_APIKEY: ${MAILGUN_APIKEY}
+      MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
     networks:
       - pirogram
     volumes:
