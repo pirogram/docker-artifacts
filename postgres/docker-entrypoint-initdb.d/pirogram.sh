@@ -30,10 +30,10 @@ CREATE TABLE password_reset_requests (
 
 CREATE TABLE study_queue (
     user_id INTEGER NOT NULL,
-    module_code CHARACTER VARYING(256) NOT NULL,
+    package_id CHARACTER VARYING(256) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE,
     updated_at TIMESTAMP WITHOUT TIME ZONE,
-    PRIMARY KEY (user_id, module_code)
+    PRIMARY KEY (user_id, package_id)
 );
 
 CREATE TABLE code_playground_data (
