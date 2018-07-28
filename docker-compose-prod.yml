@@ -1,6 +1,7 @@
 version: '3.5'
 services:  
   fluentd:
+    restart: always
     image: 'fluent/fluentd:v0.12.42'
     container_name: pi_fluentd
     volumes:
