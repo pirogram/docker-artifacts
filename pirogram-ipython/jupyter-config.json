@@ -1,0 +1,12 @@
+{
+    "shell_port": 59488,
+    "iopub_port": 59489,
+    "stdin_port": 59490,
+    "control_port": 59491,
+    "hb_port": 59492,
+    "ip": "0.0.0.0",
+    "key": "",
+    "transport": "tcp",
+    "signature_scheme": "hmac-sha256",
+    "kernel_name": "pirogram"
+}
