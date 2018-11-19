@@ -52,21 +52,6 @@ services:
     networks:
       - pirogram
 
-  content-sync:
-    image: 'pirogram/content-sync:latest'
-    container_name: pi_content_sync
-    restart: always
-    depends_on:
-      - fluentd
-    logging:
-      driver: fluentd
-      options:
-        fluentd-address: "localhost:24224"
-        tag: content-sync
-    volumes:
-      - "../pirogram-content:/content/src"
-      - "pirogram-content:/content/dst"
-
   pirogram-server:
     image: 'pirogram/pirogram-server:latest'
     restart: always
@@ -80,7 +65,6 @@ services:
       - fluentd
       - postgres
       - redis
-      - content-sync
     environment:
       NODE_ENV: production
       DB_USER: postgres
