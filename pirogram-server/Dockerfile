@@ -1,5 +1,6 @@
 FROM node:latest
 
+RUN npm config set registry http://registry.npmjs.org/  
 RUN npm install -g nodemon
 RUN apt-get update && apt-get -y install \
      apt-transport-https \
@@ -8,13 +9,13 @@ RUN apt-get update && apt-get -y install \
      gnupg2 \
      rsync \
      zip \
-     software-properties-common && \
-     curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+     imagemagick \
+     software-properties-common   
 
-RUN add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/debian \
-   $(lsb_release -cs) \
-   stable" && apt-get update && apt-get -y install docker-ce
+RUN curl -kfsSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
+   add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
+   && apt-get update && apt-get -y install docker-ce
 
 COPY refresh-books.sh /usr/local/bin/refresh-books.sh
 
